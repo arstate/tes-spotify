@@ -1,51 +1,22 @@
 import React from 'react';
-import { Track, PlaylistItem, UserProfile } from '../types';
-import { SearchIcon, PlayIcon, LogoutIcon } from './Icons';
+import { YTMusicTrack } from '../types';
+import { SearchIcon, PlayIcon } from './Icons';
 
 interface MainContentProps {
-  user: UserProfile | null;
-  onLogout: () => void;
-  activeContent: { type: 'playlist' | 'search' | 'welcome'; data: any };
-  onPlay: (track: Track, index: number, context: { type: 'playlist' | 'search', tracks: Track[], playlistId?: string }) => void;
+  activeContent: { type: 'playlist' | 'search' | 'welcome'; data: YTMusicTrack[] };
+  onPlay: (track: YTMusicTrack, contextTracks: YTMusicTrack[]) => void;
   onSearch: (query: string) => void;
 }
 
-const WelcomeScreen: React.FC<{userName?: string}> = ({ userName }) => (
+const WelcomeScreen: React.FC = () => (
     <div className="p-8">
-        <h1 className="text-3xl font-bold mb-4">Welcome{userName ? `, ${userName}` : ' to Spotify Clone'}</h1>
-        <p className="text-neutral-400">Select a featured playlist from the library to get started, or use the search bar to find music.</p>
+        <h1 className="text-3xl font-bold mb-4">Welcome to YouTube Music Clone</h1>
+        <p className="text-neutral-400">Select a chart from the library to get started, or use the search bar to find music.</p>
     </div>
 );
 
-const UserProfileDisplay: React.FC<{ user: UserProfile | null, onLogout: () => void }> = ({ user, onLogout }) => {
-    if (!user) {
-        return <div className="h-10 w-48 bg-neutral-800 rounded-full animate-pulse"></div>;
-    }
+const TrackList: React.FC<{ tracks: YTMusicTrack[], onPlay: (track: YTMusicTrack, contextTracks: YTMusicTrack[]) => void }> = ({ tracks, onPlay }) => {
     
-    return (
-        <div className="group relative">
-            <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 rounded-full p-1 pr-4 transition">
-                <img src={user.images?.[0]?.url || 'https://i.scdn.co/image/ab6761610000e5eb1020c22e0ce742eca7166e69'} alt={user.display_name} className="h-8 w-8 rounded-full" />
-                <span className="font-bold text-sm">{user.display_name}</span>
-            </button>
-            <div className="absolute top-full right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-20">
-                <button onClick={onLogout} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-neutral-700 rounded-md flex items-center gap-2">
-                    <LogoutIcon />
-                    <span>Log Out</span>
-                </button>
-            </div>
-        </div>
-    );
-};
-
-
-const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: number) => void }> = ({ tracks, onPlay }) => {
-    const formatDuration = (ms: number) => {
-        const minutes = Math.floor(ms / 60000);
-        const seconds = ((ms % 60000) / 1000).toFixed(0);
-        return `${minutes}:${parseInt(seconds) < 10 ? '0' : ''}${seconds}`;
-    };
-
     return (
         <div className="p-4">
             <div className="grid grid-cols-[32px_4fr_2fr_1fr] gap-4 text-neutral-400 border-b border-neutral-800 p-2 mb-4">
@@ -56,10 +27,10 @@ const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: numbe
             </div>
             {tracks.map((track, index) => (
                 <div 
-                    key={track?.id ? `${track.id}-${index}` : index}
+                    key={track.videoId ? `${track.videoId}-${index}` : index}
                     className="grid grid-cols-[32px_4fr_2fr_1fr] items-center gap-4 hover:bg-neutral-800 rounded p-2 group cursor-pointer"
-                    onClick={() => track && onPlay(track, index)}
-                    title={track?.name}
+                    onClick={() => track && onPlay(track, tracks)}
+                    title={track?.title}
                 >
                     <div className="relative flex items-center justify-center text-neutral-400 h-10">
                       <span className="group-hover:opacity-0 transition-opacity">{index + 1}</span>
@@ -68,14 +39,14 @@ const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: numbe
                       </div>
                     </div>
                     <div className="flex items-center gap-4 overflow-hidden">
-                        <img src={track?.album?.images?.[0]?.url || ''} alt={track?.name || 'Album Art'} className="h-10 w-10 flex-shrink-0" />
+                        <img src={track.thumbnails?.[0]?.url || ''} alt={track.title || 'Album Art'} className="h-10 w-10 flex-shrink-0" />
                         <div className="truncate">
-                            <p className="text-white truncate">{track?.name || 'Unknown Title'}</p>
-                            <p className="text-sm text-neutral-400 truncate">{track?.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}</p>
+                            <p className="text-white truncate">{track.title || 'Unknown Title'}</p>
+                            <p className="text-sm text-neutral-400 truncate">{track.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}</p>
                         </div>
                     </div>
-                    <span className="text-sm truncate text-neutral-400">{track?.album?.name || 'Unknown Album'}</span>
-                    <span className="text-sm text-neutral-400 justify-self-end pr-2">{formatDuration(track?.duration_ms || 0)}</span>
+                    <span className="text-sm truncate text-neutral-400">{track.album?.name || 'Single'}</span>
+                    <span className="text-sm text-neutral-400 justify-self-end pr-2">{track.duration}</span>
                 </div>
             ))}
         </div>
@@ -83,27 +54,18 @@ const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: numbe
 };
 
 
-const MainContent: React.FC<MainContentProps> = ({ user, onLogout, activeContent, onPlay, onSearch }) => {
+const MainContent: React.FC<MainContentProps> = ({ activeContent, onPlay, onSearch }) => {
 
   const renderContent = () => {
     switch (activeContent.type) {
-      case 'playlist': {
-        const playlistTracks = activeContent.data.items.map((item: PlaylistItem) => item?.track).filter(Boolean);
-        const handlePlay = (track: Track, index: number) => {
-            onPlay(track, index, { type: 'playlist', tracks: playlistTracks, playlistId: activeContent.data.id });
-        };
-        return <TrackList tracks={playlistTracks} onPlay={handlePlay} />;
-      }
+      case 'playlist':
       case 'search': {
-        const searchTracks = activeContent.data.filter(Boolean);
-        const handlePlay = (track: Track, index: number) => {
-            onPlay(track, index, { type: 'search', tracks: searchTracks });
-        };
-        return <TrackList tracks={searchTracks} onPlay={handlePlay} />;
+        const tracks = activeContent.data.filter(Boolean);
+        return <TrackList tracks={tracks} onPlay={onPlay} />;
       }
       case 'welcome':
       default:
-        return <WelcomeScreen userName={user?.display_name} />;
+        return <WelcomeScreen />;
     }
   };
 
@@ -121,7 +83,7 @@ const MainContent: React.FC<MainContentProps> = ({ user, onLogout, activeContent
             className="w-full bg-neutral-800 rounded-full py-2 pl-10 pr-4 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
-        <UserProfileDisplay user={user} onLogout={onLogout} />
+        {/* User profile removed as there is no login */}
       </div>
       {renderContent()}
     </div>

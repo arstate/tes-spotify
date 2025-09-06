@@ -1,9 +1,9 @@
 import React from 'react';
-import { Playlist } from '../types';
+import { YTMusicPlaylist } from '../types';
 import { HomeIcon, LibraryIcon } from './Icons';
 
 interface SidebarProps {
-  playlists: Playlist[];
+  playlists: YTMusicPlaylist[];
   onPlaylistSelect: (id: string) => void;
 }
 
@@ -22,7 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ playlists, onPlaylistSelect }) => {
         <div className="p-4">
           <div className="flex items-center gap-4 text-white font-bold mb-4">
             <LibraryIcon />
-            <span>Featured Playlists</span>
+            <span>Charts</span>
           </div>
         </div>
         <div className="flex-grow overflow-y-auto px-2">
@@ -33,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ playlists, onPlaylistSelect }) => {
                 className="p-2 rounded-md hover:bg-neutral-800 cursor-pointer text-sm text-neutral-400 hover:text-white transition duration-200"
                 onClick={() => onPlaylistSelect(playlist.id)}
                 >
-                {playlist.name}
+                {playlist.title}
                 </li>
             ))}
             </ul>

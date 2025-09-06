@@ -1,39 +1,51 @@
-export interface UserProfile {
-  country: string;
-  display_name: string;
-  email: string;
-  explicit_content: {
-    filter_enabled: boolean;
-    filter_locked: boolean;
-  };
-  external_urls: { spotify: string; };
-  followers: { href: string; total: number; };
-  href: string;
-  id: string;
-  images: Image[];
-  product: string;
-  type: string;
-  uri: string;
-}
-
-export interface Image {
+export interface YTMusicThumbnail {
   url: string;
-  height: number;
   width: number;
+  height: number;
 }
 
-export interface Playlist {
-  id: string;
+export interface YTMusicArtist {
   name: string;
-  description: string;
-  images: Image[];
-  owner: {
-    display_name: string;
-  };
-  tracks: {
-    total: number;
-  };
-  uri: string;
+  id: string | null;
+}
+
+export interface YTMusicAlbum {
+  name: string | null;
+  id: string | null;
+}
+
+export interface YTMusicTrack {
+  videoId: string;
+  title: string;
+  artists: YTMusicArtist[];
+  album: YTMusicAlbum | null;
+  duration: string; // e.g., "3:45"
+  thumbnails: YTMusicThumbnail[];
+  resultType?: 'song' | 'video'; // From search results
+}
+
+export interface YTMusicPlaylist {
+    id: string;
+    title: string;
+    itemCount: number;
+    thumbnails: YTMusicThumbnail[];
+}
+
+// FIX: Added missing Spotify type definitions to resolve import errors.
+// --- Spotify Types ---
+
+export interface ImageObject {
+  url: string;
+  height?: number;
+  width?: number;
+}
+
+export interface UserProfile {
+  id: string;
+  display_name: string;
+  images: ImageObject[];
+  email: string;
+  country: string;
 }
 
 export interface PagingObject<T> {
@@ -41,12 +53,29 @@ export interface PagingObject<T> {
   total: number;
   limit: number;
   offset: number;
+  href: string;
   next: string | null;
   previous: string | null;
 }
 
-export interface PlaylistItem {
-  track: Track;
+export interface Playlist {
+  id: string;
+  name: string;
+  images: ImageObject[];
+  description: string;
+  uri: string;
+  tracks: {
+    total: number;
+  };
+}
+
+export interface Artist {
+  name: string;
+}
+
+export interface Album {
+  name: string;
+  images: ImageObject[];
 }
 
 export interface Track {
@@ -54,20 +83,12 @@ export interface Track {
   name: string;
   artists: Artist[];
   album: Album;
-  duration_ms: number;
   uri: string;
-  preview_url: string | null;
+  duration_ms: number;
 }
 
-export interface Artist {
-  id: string;
-  name: string;
-}
-
-export interface Album {
-  id: string;
-  name: string;
-  images: Image[];
+export interface PlaylistItem {
+  track: Track;
 }
 
 export interface SearchResults {
@@ -75,5 +96,6 @@ export interface SearchResults {
 }
 
 export interface FeaturedPlaylistsResponse {
+    message: string;
     playlists: PagingObject<Playlist>;
 }
