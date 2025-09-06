@@ -65,9 +65,11 @@ export async function getFeaturedPlaylists(): Promise<PagingObject<Playlist>> {
 }
 
 export async function getPlaylistItems(playlistId: string): Promise<PagingObject<PlaylistItem>> {
-    return fetchWebApi<PagingObject<PlaylistItem>>(`playlists/${playlistId}/tracks`);
+    // Add market parameter to potentially increase preview availability
+    return fetchWebApi<PagingObject<PlaylistItem>>(`playlists/${playlistId}/tracks?market=US`);
 }
 
 export async function searchTracks(query: string): Promise<SearchResults> {
-    return fetchWebApi<SearchResults>(`search?q=${encodeURIComponent(query)}&type=track&limit=20`);
+    // Add market parameter here as well
+    return fetchWebApi<SearchResults>(`search?q=${encodeURIComponent(query)}&type=track&limit=20&market=US`);
 }
