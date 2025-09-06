@@ -1,0 +1,5 @@
+{
+  "name": "Spotify Clone Music Player",
+  "description": "A web-based music player that uses the Spotify Web API to stream music, browse playlists, and search for tracks. This application demonstrates the use of the Spotify Authorization Code with PKCE Flow and the Web Playback SDK for a rich, interactive user experience.",
+  "requestFramePermissions": []
+}

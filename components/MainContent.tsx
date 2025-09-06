@@ -1,0 +1,98 @@
+import React from 'react';
+import { Track, PlaylistItem } from '../types';
+import { SearchIcon, PlayIcon } from './Icons';
+
+interface MainContentProps {
+  activeContent: { type: 'playlist' | 'search' | 'welcome'; data: any };
+  onPlay: (track: Track, index: number) => void;
+  onSearch: (query: string) => void;
+}
+
+const WelcomeScreen: React.FC = () => (
+    <div className="p-8">
+        <h1 className="text-3xl font-bold mb-4">Welcome to Spotify Clone</h1>
+        <p className="text-neutral-400">Select a featured playlist from the library to get started, or use the search bar to find music previews.</p>
+    </div>
+);
+
+const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: number) => void }> = ({ tracks, onPlay }) => {
+    const formatDuration = (ms: number) => {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = ((ms % 60000) / 1000).toFixed(0);
+        return `${minutes}:${parseInt(seconds) < 10 ? '0' : ''}${seconds}`;
+    };
+
+    return (
+        <div className="p-4">
+            <div className="grid grid-cols-[16px_4fr_2fr_1fr] gap-4 text-neutral-400 border-b border-neutral-800 p-2 mb-4">
+                <span className="text-center">#</span>
+                <span>Title</span>
+                <span>Album</span>
+                <span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
+            </div>
+            {tracks.map((track, index) => (
+                <div key={track?.id + index} className="grid grid-cols-[16px_4fr_2fr_1fr] items-center gap-4 hover:bg-neutral-800 rounded p-2 group">
+                    <span className="text-neutral-400 text-center">{index + 1}</span>
+                    <div className="flex items-center gap-4">
+                        <img src={track?.album?.images?.[0]?.url || ''} alt={track?.name || 'Album Art'} className="h-10 w-10" />
+                        <div>
+                            <p className="text-white">{track?.name || 'Unknown Title'}</p>
+                            <p className="text-sm">{track?.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}</p>
+                        </div>
+                    </div>
+                    <span className="text-sm">{track?.album?.name || 'Unknown Album'}</span>
+                    <div className="flex items-center justify-end pr-4 relative">
+                        <span className="text-sm absolute right-12 opacity-100 group-hover:opacity-0 transition-opacity">{formatDuration(track?.duration_ms || 0)}</span>
+                        <button 
+                            onClick={() => track && onPlay(track, index)} 
+                            className="opacity-0 group-hover:opacity-100 text-white bg-green-500 rounded-full p-2 hover:scale-110 transition-transform disabled:opacity-0 disabled:cursor-not-allowed" 
+                            disabled={!track || !track.preview_url}
+                            title={!track.preview_url ? "Preview not available" : "Play preview"}
+                        >
+                            <PlayIcon />
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+
+const MainContent: React.FC<MainContentProps> = ({ activeContent, onPlay, onSearch }) => {
+
+  const renderContent = () => {
+    switch (activeContent.type) {
+      case 'playlist':
+        const playlistTracks = activeContent.data.items.map((item: PlaylistItem) => item?.track).filter(Boolean);
+        return <TrackList tracks={playlistTracks} onPlay={onPlay} />;
+      case 'search':
+        const searchTracks = activeContent.data.filter(Boolean);
+        return <TrackList tracks={searchTracks} onPlay={onPlay} />;
+      case 'welcome':
+      default:
+        return <WelcomeScreen />;
+    }
+  };
+
+  return (
+    <div className="flex-grow bg-neutral-900 rounded-lg overflow-y-auto">
+      <div className="sticky top-0 bg-neutral-900 p-4 z-10">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Search for tracks..."
+            onChange={(e) => onSearch(e.target.value)}
+            className="w-full bg-neutral-800 rounded-full py-2 pl-10 pr-4 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+      </div>
+      {renderContent()}
+    </div>
+  );
+};
+
+export default MainContent;
