@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Playlist, Track } from '../types';
-import { getFeaturedPlaylists, getPlaylistItems, searchTracks } from '../services/spotifyService';
+import { Playlist, Track, UserProfile } from '../types';
+import { getFeaturedPlaylists, getPlaylistItems, searchTracks, getUserProfile, logout } from '../services/spotifyService';
 import Sidebar from './Sidebar';
 import MainContent from './MainContent';
 import Player from './Player';
 
 const Dashboard: React.FC = () => {
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [activeContent, setActiveContent] = useState<{ type: 'playlist' | 'search' | 'welcome'; data: any }>({ type: 'welcome', data: null });
   const [activeTrack, setActiveTrack] = useState<Track | null>(null);
@@ -13,6 +14,13 @@ const Dashboard: React.FC = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
 
   useEffect(() => {
+    getUserProfile()
+        .then(setUser)
+        .catch(error => {
+            console.error("Failed to fetch user profile:", error);
+            // If the token is invalid, the service will handle logout.
+        });
+        
     getFeaturedPlaylists()
       .then(data => setPlaylists(data.items))
       .catch(error => console.error("Failed to fetch featured playlists:", error));
@@ -73,6 +81,8 @@ const Dashboard: React.FC = () => {
       <div className="flex-grow flex gap-2 overflow-hidden">
         <Sidebar playlists={playlists} onPlaylistSelect={handlePlaylistSelect} />
         <MainContent 
+            user={user}
+            onLogout={logout}
             activeContent={activeContent} 
             onPlay={handleTrackPlay}
             onSearch={handleSearch}
