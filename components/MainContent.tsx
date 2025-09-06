@@ -24,34 +24,36 @@ const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: numbe
 
     return (
         <div className="p-4">
-            <div className="grid grid-cols-[16px_4fr_2fr_1fr] gap-4 text-neutral-400 border-b border-neutral-800 p-2 mb-4">
+            <div className="grid grid-cols-[32px_4fr_2fr_1fr] gap-4 text-neutral-400 border-b border-neutral-800 p-2 mb-4">
                 <span className="text-center">#</span>
                 <span>Title</span>
                 <span>Album</span>
-                <span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
+                <span className="justify-self-end pr-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
             </div>
             {tracks.map((track, index) => (
-                <div key={track?.id + index} className="grid grid-cols-[16px_4fr_2fr_1fr] items-center gap-4 hover:bg-neutral-800 rounded p-2 group">
-                    <span className="text-neutral-400 text-center">{index + 1}</span>
-                    <div className="flex items-center gap-4">
-                        <img src={track?.album?.images?.[0]?.url || ''} alt={track?.name || 'Album Art'} className="h-10 w-10" />
-                        <div>
-                            <p className="text-white">{track?.name || 'Unknown Title'}</p>
-                            <p className="text-sm">{track?.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}</p>
+                <div 
+                    key={track?.id ? `${track.id}-${index}` : index}
+                    className={`grid grid-cols-[32px_4fr_2fr_1fr] items-center gap-4 hover:bg-neutral-800 rounded p-2 group ${track?.preview_url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                    onClick={() => track?.preview_url && track && onPlay(track, index)}
+                    title={!track?.preview_url ? "Preview not available" : track?.name}
+                >
+                    <div className="relative flex items-center justify-center text-neutral-400 h-10">
+                      <span className="group-hover:opacity-0 transition-opacity">{index + 1}</span>
+                      {track?.preview_url && (
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-white">
+                          <PlayIcon />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 overflow-hidden">
+                        <img src={track?.album?.images?.[0]?.url || ''} alt={track?.name || 'Album Art'} className="h-10 w-10 flex-shrink-0" />
+                        <div className="truncate">
+                            <p className="text-white truncate">{track?.name || 'Unknown Title'}</p>
+                            <p className="text-sm text-neutral-400 truncate">{track?.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}</p>
                         </div>
                     </div>
-                    <span className="text-sm">{track?.album?.name || 'Unknown Album'}</span>
-                    <div className="flex items-center justify-end pr-4 relative">
-                        <span className="text-sm absolute right-12 opacity-100 group-hover:opacity-0 transition-opacity">{formatDuration(track?.duration_ms || 0)}</span>
-                        <button 
-                            onClick={() => track && onPlay(track, index)} 
-                            className="opacity-0 group-hover:opacity-100 text-white bg-green-500 rounded-full p-2 hover:scale-110 transition-transform disabled:opacity-0 disabled:cursor-not-allowed" 
-                            disabled={!track || !track.preview_url}
-                            title={!track.preview_url ? "Preview not available" : "Play preview"}
-                        >
-                            <PlayIcon />
-                        </button>
-                    </div>
+                    <span className="text-sm truncate text-neutral-400">{track?.album?.name || 'Unknown Album'}</span>
+                    <span className="text-sm text-neutral-400 justify-self-end pr-2">{formatDuration(track?.duration_ms || 0)}</span>
                 </div>
             ))}
         </div>
