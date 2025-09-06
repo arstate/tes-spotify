@@ -1,20 +1,19 @@
 import React from 'react';
 import { Track, PlaylistItem, UserProfile } from '../types';
 import { SearchIcon, PlayIcon, LogoutIcon } from './Icons';
-import { logout } from '../services/spotifyService';
 
 interface MainContentProps {
   user: UserProfile | null;
   onLogout: () => void;
   activeContent: { type: 'playlist' | 'search' | 'welcome'; data: any };
-  onPlay: (track: Track, index: number) => void;
+  onPlay: (track: Track, index: number, context: { type: 'playlist' | 'search', tracks: Track[], playlistId?: string }) => void;
   onSearch: (query: string) => void;
 }
 
 const WelcomeScreen: React.FC<{userName?: string}> = ({ userName }) => (
     <div className="p-8">
         <h1 className="text-3xl font-bold mb-4">Welcome{userName ? `, ${userName}` : ' to Spotify Clone'}</h1>
-        <p className="text-neutral-400">Select a featured playlist from the library to get started, or use the search bar to find music previews.</p>
+        <p className="text-neutral-400">Select a featured playlist from the library to get started, or use the search bar to find music.</p>
     </div>
 );
 
@@ -26,10 +25,10 @@ const UserProfileDisplay: React.FC<{ user: UserProfile | null, onLogout: () => v
     return (
         <div className="group relative">
             <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 rounded-full p-1 pr-4 transition">
-                <img src={user.images?.[0]?.url} alt={user.display_name} className="h-8 w-8 rounded-full" />
+                <img src={user.images?.[0]?.url || 'https://i.scdn.co/image/ab6761610000e5eb1020c22e0ce742eca7166e69'} alt={user.display_name} className="h-8 w-8 rounded-full" />
                 <span className="font-bold text-sm">{user.display_name}</span>
             </button>
-            <div className="absolute top-full right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+            <div className="absolute top-full right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-20">
                 <button onClick={onLogout} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-neutral-700 rounded-md flex items-center gap-2">
                     <LogoutIcon />
                     <span>Log Out</span>
@@ -58,17 +57,15 @@ const TrackList: React.FC<{ tracks: Track[], onPlay: (track: Track, index: numbe
             {tracks.map((track, index) => (
                 <div 
                     key={track?.id ? `${track.id}-${index}` : index}
-                    className={`grid grid-cols-[32px_4fr_2fr_1fr] items-center gap-4 hover:bg-neutral-800 rounded p-2 group ${track?.preview_url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
-                    onClick={() => track?.preview_url && track && onPlay(track, index)}
-                    title={!track?.preview_url ? "Preview not available" : track?.name}
+                    className="grid grid-cols-[32px_4fr_2fr_1fr] items-center gap-4 hover:bg-neutral-800 rounded p-2 group cursor-pointer"
+                    onClick={() => track && onPlay(track, index)}
+                    title={track?.name}
                 >
                     <div className="relative flex items-center justify-center text-neutral-400 h-10">
                       <span className="group-hover:opacity-0 transition-opacity">{index + 1}</span>
-                      {track?.preview_url && (
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-white">
-                          <PlayIcon />
-                        </div>
-                      )}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-white">
+                        <PlayIcon />
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 overflow-hidden">
                         <img src={track?.album?.images?.[0]?.url || ''} alt={track?.name || 'Album Art'} className="h-10 w-10 flex-shrink-0" />
@@ -90,12 +87,20 @@ const MainContent: React.FC<MainContentProps> = ({ user, onLogout, activeContent
 
   const renderContent = () => {
     switch (activeContent.type) {
-      case 'playlist':
+      case 'playlist': {
         const playlistTracks = activeContent.data.items.map((item: PlaylistItem) => item?.track).filter(Boolean);
-        return <TrackList tracks={playlistTracks} onPlay={onPlay} />;
-      case 'search':
+        const handlePlay = (track: Track, index: number) => {
+            onPlay(track, index, { type: 'playlist', tracks: playlistTracks, playlistId: activeContent.data.id });
+        };
+        return <TrackList tracks={playlistTracks} onPlay={handlePlay} />;
+      }
+      case 'search': {
         const searchTracks = activeContent.data.filter(Boolean);
-        return <TrackList tracks={searchTracks} onPlay={onPlay} />;
+        const handlePlay = (track: Track, index: number) => {
+            onPlay(track, index, { type: 'search', tracks: searchTracks });
+        };
+        return <TrackList tracks={searchTracks} onPlay={handlePlay} />;
+      }
       case 'welcome':
       default:
         return <WelcomeScreen userName={user?.display_name} />;

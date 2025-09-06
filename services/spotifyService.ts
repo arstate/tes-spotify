@@ -8,7 +8,7 @@ const redirectUri = window.location.origin;
 // --- PKCE Helper Functions ---
 
 const generateRandomString = (length: number): string => {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01230123456789';
   let text = '';
   for (let i = 0; i < length; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
@@ -42,7 +42,7 @@ export async function redirectToAuthCodeFlow() {
   params.append("client_id", clientId);
   params.append("response_type", "code");
   params.append("redirect_uri", redirectUri);
-  params.append("scope", "user-read-private user-read-email playlist-read-private");
+  params.append("scope", "user-read-private user-read-email playlist-read-private streaming user-read-playback-state user-modify-playback-state");
   params.append("code_challenge_method", "S256");
   params.append("code_challenge", challenge);
 
@@ -132,6 +132,21 @@ async function fetchWebApi<T>(endpoint: string, method: string = 'GET', body?: a
   }
   return res.json();
 }
+
+export async function startOrResumePlayback(deviceId: string, context?: { uri: string; offset?: number }, uris?: string[]) {
+    const body: { context_uri?: string; offset?: { position: number }; uris?: string[] } = {};
+    if (context) {
+        body.context_uri = context.uri;
+        if (typeof context.offset === 'number') {
+            body.offset = { position: context.offset };
+        }
+    } else if (uris) {
+        body.uris = uris;
+    }
+
+    return fetchWebApi<void>(`me/player/play?device_id=${deviceId}`, 'PUT', body);
+}
+
 
 export async function getUserProfile(): Promise<UserProfile> {
     return fetchWebApi<UserProfile>('me');
