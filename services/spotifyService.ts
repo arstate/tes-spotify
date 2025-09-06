@@ -2,7 +2,8 @@ import { PagingObject, Playlist, PlaylistItem, SearchResults, FeaturedPlaylistsR
 
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 const clientId = "37906c3ef9ba4b658e29f86ee6309c8e";
-const redirectUri = window.location.origin + window.location.pathname;
+// Use the application's origin as the redirect URI
+const redirectUri = window.location.origin;
 
 // --- PKCE Helper Functions ---
 
