@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { YTMusicTrack } from '../types';
 import { SearchIcon, PlayIcon } from './Icons';
 
@@ -55,12 +55,26 @@ const TrackList: React.FC<{ tracks: YTMusicTrack[], onPlay: (track: YTMusicTrack
 
 
 const MainContent: React.FC<MainContentProps> = ({ activeContent, onPlay, onSearch }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      // Don't search for empty strings, but allow clearing the results
+      onSearch(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, onSearch]);
+
 
   const renderContent = () => {
     switch (activeContent.type) {
       case 'playlist':
       case 'search': {
         const tracks = activeContent.data.filter(Boolean);
+        if (tracks.length === 0 && activeContent.type === 'search') {
+            return <div className="p-8 text-center text-neutral-400">No results found for "{searchTerm}".</div>
+        }
         return <TrackList tracks={tracks} onPlay={onPlay} />;
       }
       case 'welcome':
@@ -79,11 +93,11 @@ const MainContent: React.FC<MainContentProps> = ({ activeContent, onPlay, onSear
           <input
             type="text"
             placeholder="Search for tracks..."
-            onChange={(e) => onSearch(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-neutral-800 rounded-full py-2 pl-10 pr-4 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
-        {/* User profile removed as there is no login */}
       </div>
       {renderContent()}
     </div>
